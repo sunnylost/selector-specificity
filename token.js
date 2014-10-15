@@ -100,10 +100,13 @@
 
         while((c = input[++tokPos]) && isStringLiteral(c));
 
-        if(c !== (isDoubleQuote ? '"' : '\'') && isThrowError) {
-            throw Error({
-                message: 'String didn\'t finished. column must be " or \''
-            })
+        if(c !== (isDoubleQuote ? '"' : '\'')) {
+            if(isThrowError) {
+                throw Error({
+                    message: 'String didn\'t finished. column must be " or \''
+                })
+            }
+            return null;
         }
 
         tokPos++;
@@ -167,7 +170,12 @@
 
         tokPos--;
 
-        if(start == tokPos && isThrowError) throw Error('column ' + start + ' is not a name.');
+        if(start == tokPos) {
+            if(isThrowError) {
+                throw Error('column ' + start + ' is not a name.');
+            }
+            return;
+        }
 
         return {
             type: tokType.Identifier,
@@ -223,8 +231,11 @@
 
         tokens.push(isStringLiteralBegin(input[tokPos].charCodeAt(0)) ? scanStringLiteral() : scanName());
 
-        if(input[tokPos] != ']' && isThrowError) {
-            throw Error('Attribute selector did not finished correctly.');
+        if(input[tokPos] != ']') {
+            if(isThrowError) {
+                throw Error('Attribute selector did not finished correctly.');
+            }
+            return;
         }
 
         return {
@@ -254,6 +265,7 @@
                 } else if(isThrowError) {
                     throw Error('column ' + start + ' need ::after');
                 }
+                return;
 
             case 'b':
                 if('before' === input.slice(tokPos, tokPos + 6).toLowerCase()) {
@@ -264,6 +276,7 @@
                 } else if(isThrowError) {
                     throw Error('column ' + start + ' need ::before');
                 }
+                return;
 
             case 'f':
                 if('first-line' === input.slice(tokPos, tokPos + 10).toLowerCase()) {
@@ -279,11 +292,13 @@
                 } else if(isThrowError) {
                     throw Error('column ' + start + ' need ::first-line or ::first-letter');
                 }
+                return;
 
             default:
                 if(isThrowError) {
                     throw Error('column ' + token.start + ' need a pseudo element')
                 }
+                return;
         }
 
         return token;
@@ -475,8 +490,8 @@
     function tokenize(source) {
         if(!source) return null;
 
-        input  = source;
-        length = source.length;
+        input  = source.trim();
+        length = input.length;
         tokPos = 0;
         tokens = [];
 

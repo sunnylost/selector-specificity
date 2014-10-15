@@ -69,7 +69,21 @@
     <script>
         (function() {
             var timeOutId,
-                preSelectors = '';
+                preSelectors = '',
+
+                els = {
+                    set id(v) {
+                        id.innerHTML = v;
+                    },
+
+                    set attr(v) {
+                        attr.innerHTML = v;
+                    },
+
+                    set elements(v) {
+                        elements.innerHTML = v;
+                    }
+                };
 
             tokenize.silence();
 
@@ -88,7 +102,7 @@
                         result = null;
                     }
 
-                    render(calculate(result));
+                    calculate(result);
                 }, 500)
             };
 
@@ -105,27 +119,23 @@
 
                     if(val == '#' || val == '.' || type == 6 || type == 7) {
                         if(arr[i + 1] && arr[i + 1].type == 2) {
-                            val == '#' ? (id += 1) : (attr += 1);
-                            type == 6 ? (elements += 1) : (attr += 1);
+                            if(val == '#') {
+                                return id += 1;
+                            }
+
+                            if(type == 6) {
+                                return elements += 1;
+                            }
                         }
+                        attr += 1;
                     }
 
                     console.log(v)
                 })
 
-                return {
-                    id: id,
-                    attr: attr,
-                    elements: elements
-                }
-            }
-
-            function render(content) {
-                if(!content) return;
-
-                id.innerHTML       = content.id;
-                attr.innerHTML     = content.attr;
-                elements.innerHTML = content.elements;
+                els.id       = id;
+                els.attr     = attr;
+                els.elements = elements;
             }
         }())
     </script>
