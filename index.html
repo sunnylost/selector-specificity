@@ -49,6 +49,26 @@
             margin-left: 5px;
             font-style: normal;
         }
+
+        /* error */
+        #error {
+            position: absolute;
+            top: 54px;
+            height: 38px;
+            background: #f00;
+            opacity: .5;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        #ruler {
+            height: 35px;
+            margin: 50px auto 0;
+            padding: 5px;
+            line-height: 35px;
+            font-size: 25px;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
@@ -64,12 +84,15 @@
             Elements:<i id="elements" class="num"></i>
         </li>
     </ul>
-
+    <div id="error"></div>
+    <span id="ruler"></span>
     <script src="token.js"></script>
     <script>
         (function() {
             var timeOutId,
                 preSelectors = '',
+
+                offset = selectors.getBoundingClientRect(),
 
                 els = {
                     set id(v) {
@@ -117,6 +140,10 @@
                     var type = v.type,
                         val  = v.value;
 
+                    if(type == -1) {
+                        return showError(v);
+                    }
+
                     if(val == '#' || val == '.' || type == 6 || type == 7) {
                         if(arr[i + 1] && arr[i + 1].type == 2) {
                             if(val == '#') {
@@ -136,6 +163,23 @@
                 els.id       = id;
                 els.attr     = attr;
                 els.elements = elements;
+            }
+
+            function showError(token) {
+                var input = selectors.value.trim(),
+                    tmp, left, width;
+
+                ruler.innerHTML = input.substring(0, token.start);
+                tmp = ruler.getClientRects()[0];
+                left = tmp.right - tmp.left;
+
+                ruler.innerHTML = token.value;
+                tmp = ruler.getClientRects()[0];
+                width = tmp.right - tmp.left;
+
+                if(!isNaN(left)) {
+                    error.style.cssText = 'visibility:visible;left:' + (offset.left + left) + 'px;width:' + width + 'px';
+                }
             }
         }())
     </script>

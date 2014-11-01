@@ -105,6 +105,8 @@
                 throw Error({
                     message: 'String didn\'t finished. column must be " or \''
                 })
+            } else {
+                return errorToken(start);
             }
             return null;
         }
@@ -173,6 +175,8 @@
         if(start == tokPos) {
             if(isThrowError) {
                 throw Error('column ' + start + ' is not a name.');
+            } else {
+                return errorToken(start);
             }
             return;
         }
@@ -235,7 +239,7 @@
             if(isThrowError) {
                 throw Error('Attribute selector did not finished correctly.');
             }
-            return;
+            return errorToken(start);
         }
 
         return {
@@ -250,8 +254,9 @@
     function scanPseudoElement() {
 
         var c = input[++tokPos],
+            start = tokPos - 2,
             token = {
-                start: tokPos - 2,
+                start: start,
                 type: tokType.PseudoElement
             };
 
@@ -259,44 +264,52 @@
             case 'a':
                 if('after' === input.slice(tokPos, tokPos + 5).toLowerCase()) {
                     token.value = '::after';
-                    token.end = token.start + 7;
+                    token.end = start + 7;
                     tokPos += 5;
                     break;
                 } else if(isThrowError) {
                     throw Error('column ' + start + ' need ::after');
+                } else {
+                    return errorToken(start);
                 }
                 return;
 
             case 'b':
                 if('before' === input.slice(tokPos, tokPos + 6).toLowerCase()) {
                     token.value = '::before';
-                    token.end = token.start + 8;
+                    token.end = start + 8;
                     tokPos += 6;
                     break;
                 } else if(isThrowError) {
                     throw Error('column ' + start + ' need ::before');
+                } else {
+                    return errorToken(start);
                 }
                 return;
 
             case 'f':
                 if('first-line' === input.slice(tokPos, tokPos + 10).toLowerCase()) {
                     token.value = '::first-line';
-                    token.end = token.start + 12;
+                    token.end = start + 12;
                     tokPos += 10;
                     break;
                 } else if('first-letter' === input.slice(tokPos, tokPos + 12).toLowerCase()) {
                     token.value = '::first-letter';
-                    token.end = token.start + 14;
+                    token.end = start + 14;
                     tokPos += 12;
                     break;
                 } else if(isThrowError) {
                     throw Error('column ' + start + ' need ::first-line or ::first-letter');
+                } else {
+                    return errorToken(start);
                 }
                 return;
 
             default:
                 if(isThrowError) {
-                    throw Error('column ' + token.start + ' need a pseudo element')
+                    throw Error('column ' + start + ' need a pseudo element')
+                } else {
+                    return errorToken(start);
                 }
                 return;
         }
@@ -323,6 +336,7 @@
         if(input[++tokPos] === '(') {
             return scanFunction(pseudoClass);
         }
+        --tokPos;
 
         switch(len) {
             case 4:
@@ -441,6 +455,8 @@
             }
         } else if(isThrowError) {
             throw Error(pseudoClass + ' is not a valid pseudo class name!');
+        } else {
+            return errorToken(tokPos - pseudoClass.length);
         }
     }
 
@@ -450,6 +466,8 @@
     function expect(c) {
         if(input.slice(tokPos, tokPos + c.length) !== c && isThrowError) {
             throw Error('column ' + (tokPos + 1) + ' need ' + c);
+        } else {
+            return errorToken(tokPos);
         }
     }
 
@@ -476,6 +494,16 @@
         return scanPunctuator() || {
             type: tokType.EOF
         };
+    }
+
+    /* only for debug */
+    function errorToken(start) {
+        var blankIndex = input.indexOf(' ');
+        return {
+            type: -1,
+            start: start,
+            value: input.substring(start, (blankIndex > 0 ? blankIndex : input.length) - 1)
+        }
     }
 
     function check() {
